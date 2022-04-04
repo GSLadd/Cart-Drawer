@@ -1,0 +1,7 @@
+Put the below code to under </body> 
+    {% render 'ls-cart-drawer' %}
+    <script src="{{ 'ls-cart-drawer.js' | asset_url }}" defer="defer"></script>
+    {{ 'ls-cart-drawer.css' | asset_url | stylesheet_tag }}
+
+2. Please add the below function to "AddToCart success" function.
+      getCartHtml();
