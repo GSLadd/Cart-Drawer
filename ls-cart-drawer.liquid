@@ -1,0 +1,152 @@
+<div class="cart-drawer-overlay"></div>
+<div class="main-cart-drawer">
+  <div class="cart-drawer-content">
+    <!--     header start -->
+    <div class="cart-drawer-header">
+      <h3 class="heading-class-header h3">My Cart</h3>
+      <div class="cart-drawer-close-btn" onclick="functionclode(this);">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M18.9871 0.299588L11 8.28668L3.01291 0.299588L0.35055 2.96195L8.33764 10.949L0.35055 18.9361L3.01291 21.5985L11 13.6114L18.9871 21.5985L21.6494 18.9361L13.6624 10.949L21.6495 2.96195L18.9871 0.299588Z" fill="#9B9B9B"/>
+        </svg>
+      </div>
+    </div>
+    <!--     header end -->
+    <!--     body start -->
+    {% if cart.item_count > 0 %}
+    <div class="cart-contents">
+
+      <ul class="all-content-cart">
+        {%- for item in cart.items -%}
+        {% capture spinner %}
+        <div class="cart-drawer-spiner" style="display:none;">
+          <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-spinner" viewBox="0 0 20 20"><path d="M7.229 1.173a9.25 9.25 0 1 0 11.655 11.412 1.25 1.25 0 1 0-2.4-.698 6.75 6.75 0 1 1-8.506-8.329 1.25 1.25 0 1 0-.75-2.385z" fill="#919EAB"></path></svg>
+        </div>
+        {% endcapture %}
+        <li class="item-product-content" data-id="{{item.id}}">
+          <div class="item-img-wrapper">
+            <a href="{{item.url}}" class="imgposition"><img class="cart__image{% if item.image == null %} hide{% endif %}" src="{{ item | img_url : '200x200'}}" alt="{{ item.image.alt | escape }}"></a>
+          </div>
+          <div class="item-description-data">
+            <div class="item-remove" data-id="{{item.id}}" onclick="removitem(this);">
+
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M9.66634 1.27325L8.72634 0.333252L4.99967 4.05992L1.27301 0.333252L0.333008 1.27325L4.05967 4.99992L0.333008 8.72659L1.27301 9.66659L4.99967 5.93992L8.72634 9.66659L9.66634 8.72659L5.93967 4.99992L9.66634 1.27325Z" fill="#012169" fill-opacity="0.25"/>
+              </svg>
+              {{ spinner }}
+            </div>
+            <h3 class="product-title h3">
+              <a class="item-links" href="{{item.url}}">{{item.title | truncate: 20 }}</a>
+            </h3>
+            {%- assign variant_options = 'template ' | split: ' ' -%}
+            {%- if item.product.has_only_default_variant != true -%}
+            {%- assign variant_options = item.options_with_values -%}
+            {%- endif -%}
+            {%- assign property_size = item.properties | size -%}
+            <ul class="product-details{% if item.product.has_only_default_variant and property_size == 0 %} hide{% endif %}" data-cart-item-details aria-label="{{ 'cart.label.product_details' | t }}">
+              {%- for option in variant_options -%}
+              <li class="product-details__item product-details__item--variant-option{% if item.product.has_only_default_variant %} hide{% endif %}" data-cart-item-option>{{ option.name }}: {{ option.value }}</li>
+              {%- endfor -%}
+            </ul>
+            <div class="qty-box-div">
+              <p class="qty-label">Qty</p>
+              <div class="input-box">
+                <div class="minus-qty" data-id="{{item.id}}" onclick="minusqty(this);">
+                  <svg class="Icon Icon--minus " role="presentation" viewBox="0 0 16 2">
+                    <path d="M1,1 L15,1" stroke="currentColor" fill="none" fill-rule="evenodd" stroke-linecap="square"></path>
+                  </svg>
+                  {{ spinner }}
+                </div>
+                <input type="number" class="input-top-cart" value="{{item.quantity}}" min="1">
+                <div class="plus-qty" data-id="{{item.id}}" onclick="plseqty(this);">
+
+                  <svg class="Icon Icon--plus " role="presentation" viewBox="0 0 16 16">
+                    <g stroke="currentColor" fill="none" fill-rule="evenodd" stroke-linecap="square">
+                      <path d="M8,1 L8,15"></path>
+                      <path d="M1,8 L15,8"></path>
+                    </g>
+                  </svg>
+                  {{ spinner }}
+                </div>
+              </div>
+              <div class="item-price-div">
+                <div class="product-item-pricing">{{item.original_line_price | money_without_trailing_zeros}}</div>
+              </div>
+            </div>
+          </div>
+        </li>
+        {%- endfor -%}
+      </ul>
+    </div>
+    <!--     body end -->
+    <div class="footer-cart-drawer">
+      <div class="footer-div-content">
+
+        <div class="subtotal">
+          {% assign regular__total = 0 %}
+          {% for item in cart.items %}
+          {% assign regular__total_price = 0 %}
+          {% capture regular__price %}{{ item.variant.compare_at_price }}{% endcapture %}
+          {% capture item__price %}{{ item.variant.price }}{% endcapture %}
+          {% capture total_qty %} {{ item.quantity }} {% endcapture %}
+          {% if regular__price > item__price %}
+          {% assign regular__total_price = regular__price | times: total_qty %}
+          {% else %}
+          {% assign regular__total_price = item__price | times: total_qty %}
+          {% endif %}
+          {% assign regular__total = regular__total_price | plus: regular__total %}
+          {% endfor %}
+          {% capture total_saving %}{{ regular__total | minus: cart.total_price }} {% endcapture %}
+
+          {% assign cart_total_price = cart.total_price %}
+
+          {% if regular__total > cart_total_price %}
+          <p class="money cart-sub-total"><b>Base Price:</b> <s>{{ regular__total | money }}</s></p>
+          {% endif %}
+          <p class="money cart-sub-total"><b>Our Price:</b> <span>{{ cart_total_price | money }}</span></p>
+          {% if regular__total > cart_total_price %}
+          <p class="money cart-sub-total"><b>Save Upto:</b> <span>{{total_saving | money}}</span></p>
+          {% endif %}
+        </div>
+
+        <div class="cart-footer-btn-div">
+          <a class="view-cart-btn btn btn-full-width" href="/cart">View Cart</a>
+          <a class="checkout-btn-div btn btn-full-width" href="/cart/checkout">Checkout</a>
+        </div>
+      </div>
+    </div>
+    {%else%}
+    <div class="blank-cart-content">
+      <div class="blank-img">
+        <svg xmlns="http://www.w3.org/2000/svg" width="163" height="124" viewBox="0 0 163 124" fill="none">
+          <circle cx="52" cy="112" r="11" stroke="#012169" stroke-width="2"/>
+          <line x1="64" y1="111" x2="128" y2="111" stroke="#012169" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="139" cy="112" r="11" stroke="#012169" stroke-width="2"/>
+          <path d="M33 44L161 44" stroke="#012169" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M143 101L161 44" stroke="#012169" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M48.5608 101.048L23.8252 16.5105C19.9392 5.70122 1.46535 6.68194 1.46535 6.68194" stroke="#012169" stroke-width="2"/>
+          <path d="M79 90.5C91.0528 83.7581 98.2308 82.2932 113 90.5" stroke="#821E82" stroke-width="2"/>
+          <circle cx="83.5" cy="65.5" r="3.5" stroke="#821E82" stroke-width="2"/>
+          <circle cx="105.5" cy="65.5" r="3.5" stroke="#821E82" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="blank-text">
+        <h3 class="blank-cart-title h3">Your cart is empty</h3>
+      </div>
+      <a class="continue-shoping-btn" href="/">Continue shopping</a>
+    </div>
+    {%endif%}
+  </div>
+</div>
+
+<style>
+  .cart-drawer-spiner {
+    position: absolute;
+    top: 4px;
+    right: -5px;
+    color: #dc8d6c;
+  }
+  .cart-drawer-spiner svg.icon.icon-spinner {
+    height: 30px;
+    width: 30px;
+  }
+</style>
